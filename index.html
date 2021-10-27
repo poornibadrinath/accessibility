@@ -25,24 +25,26 @@ body { margin: 0; padding: 0; }
         center: [11.5765, 48.1452] // starting center
     });
 
-    map.on('load', () => {
-        map.addSource('stepsandrampsM', {
-            type: 'geojson',
-            // Use a URL for the value for the `data` property.
-            data: 'https://storage.cloud.google.com/steps_ramps/stepsandrampsM.geojson'
-        });
 
-        map.addLayer({
-            'id': 'stepsandrampsM-layer',
-            'type': 'Feature',
-            'source': 'stepsandrampsM',
-		'type': 'line',
+        map.on('load', () => {
+map.addSource('earthquakes', {
+type: 'geojson',
+// Use a URL for the value for the `data` property.
+data: 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson'
+});
+ 
+map.addLayer({
+'id': 'earthquakes-layer',
+'type': 'circle',
+'source': 'earthquakes',
 'paint': {
-'line-color': '#4264fb',
-'line-stroke-width': 2,
-'line-stroke-color': '#ffffff'
-        });
-    });
+'circle-radius': 8,
+'circle-stroke-width': 2,
+'circle-color': 'red',
+'circle-stroke-color': 'white'
+}
+});
+});
 	
 map.addControl(
 new MapboxDirections({
