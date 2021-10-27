@@ -27,21 +27,20 @@ body { margin: 0; padding: 0; }
 
 
         map.on('load', () => {
-map.addSource('earthquakes', {
+map.addSource('stepsandrampsM', {
 type: 'geojson',
 // Use a URL for the value for the `data` property.
-data: 'https://docs.mapbox.com/mapbox-gl-js/assets/earthquakes.geojson'
+data: 'https://github.com/poornibadrinath/accessibility/blob/95e0fc620fecaaf8bf354c4d3f88fa184ebeeec0/stepsandrampsM.geojson'
 });
  
 map.addLayer({
-'id': 'earthquakes-layer',
-'type': 'circle',
-'source': 'earthquakes',
+'id': 'stepsandrampsM-layer',
+'type': 'line',
+'source': 'stepsandrampsM',
 'paint': {
-'circle-radius': 8,
-'circle-stroke-width': 2,
-'circle-color': 'red',
-'circle-stroke-color': 'white'
+'line-stroke-width': 2,
+'line-color': 'blue',
+'line-stroke-color': 'white'
 }
 });
 });
