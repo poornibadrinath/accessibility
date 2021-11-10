@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <title>Animate a point along a route</title>
 <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no">
-<link href="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.css" rel="stylesheet">
-<script src="https://api.mapbox.com/mapbox-gl-js/v2.5.1/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v2.6.0/mapbox-gl.js"></script>
 <style>
 body { margin: 0; padding: 0; }
 #map { position: absolute; top: 0; bottom: 0; width: 100%; }
@@ -13,36 +13,37 @@ body { margin: 0; padding: 0; }
 </head>
 <body>
 <style>
-.overlay {
-position: absolute;
-top: 10px;
-left: 10px;
-}
- 
-.overlay button {
-font: 600 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-background-color: #3386c0;
-color: #fff;
-display: inline-block;
-margin: 0;
-padding: 10px 20px;
-border: none;
-cursor: pointer;
-border-radius: 3px;
-}
- 
-.overlay button:hover {
-background-color: #4ea0da;
-}
+    .overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
+    .overlay button {
+        font: 600 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #3386c0;
+        color: #fff;
+        display: inline-block;
+        margin: 0;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+    .overlay button:hover {
+        background-color: #4ea0da;
+    }
 </style>
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
- 
+
 <div id="map"></div>
 <div class="overlay">
-<button id="replay">Replay</button>
+    <button id="replay">Replay</button>
 </div>
-	
-  mapboxgl.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjanUwbmYzc3UwdDI3NGRtZ3kzMTltbWZpIn0.SB9PEksVcEwWvZJ9A7J9uA';
+
+<script>
+	mapboxgl.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjanUwbmYzc3UwdDI3NGRtZ3kzMTltbWZpIn0.SB9PEksVcEwWvZJ9A7J9uA';
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v11',
@@ -50,7 +51,7 @@ background-color: #4ea0da;
         zoom: 14
     });
 
-    // Harthof
+        // Harthof
     const origin = [11.5694, 48.2038];
 
     // Olschewskibogen
@@ -242,6 +243,23 @@ background-color: #4ea0da;
         ]
     };
 
+
+    // A single point that animates along the route.
+    // Coordinates are initially set to origin.
+    const point = {
+        'type': 'FeatureCollection',
+        'features': [
+            {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'Point',
+                    'coordinates': origin
+                }
+            }
+        ]
+    };
+
     // Calculate the distance in kilometers between route start/end point.
     const lineDistance = turf.length(route.features[0]);
 
@@ -356,3 +374,7 @@ background-color: #4ea0da;
         // Start the animation
         animate(counter);
     });
+</script>
+
+</body>
+</html>
