@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -14,47 +13,38 @@ body { margin: 0; padding: 0; }
 </head>
 <body>
 <style>
-.overlay {
-position: absolute;
-top: 10px;
-left: 10px;
-}
- 
-.overlay button {
-font: 600 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-background-color: #3386c0;
-color: #fff;
-display: inline-block;
-margin: 0;
-padding: 10px 20px;
-border: none;
-cursor: pointer;
-border-radius: 3px;
-}
- 
-.overlay button:hover {
-background-color: #4ea0da;
-}
+    .overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+    }
+
+    .overlay button {
+        font: 600 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;
+        background-color: #3386c0;
+        color: #fff;
+        display: inline-block;
+        margin: 0;
+        padding: 10px 20px;
+        border: none;
+        cursor: pointer;
+        border-radius: 3px;
+    }
+
+    .overlay button:hover {
+        background-color: #4ea0da;
+    }
 </style>
 <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
- 
-<div id="map"></div>
-<div class="overlay">
-<button id="replay">Replay</button>
-</div>
-
-<style>
-body { margin: 0; padding: 0; }
-#map { position: absolute; top: 0; bottom: 0; width: 100%; }
-</style>
-</head>
-<body>
 <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.0/mapbox-gl-directions.js"></script>
 <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.0/mapbox-gl-directions.css" type="text/css">
 <div id="map"></div>
- 
+<div class="overlay">
+    <button id="replay">Replay</button>
+</div>
+
 <script>
-mapboxgl.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjanUwbmYzc3UwdDI3NGRtZ3kzMTltbWZpIn0.SB9PEksVcEwWvZJ9A7J9uA';
+	mapboxgl.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjanUwbmYzc3UwdDI3NGRtZ3kzMTltbWZpIn0.SB9PEksVcEwWvZJ9A7J9uA';
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/streets-v11',
@@ -211,7 +201,7 @@ mapboxgl.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjanUwbmYzc3Uwd
 
         // Start the animation
         animate(counter);
-    });
+    })
     
     map.addControl(
 new MapboxDirections({
@@ -221,6 +211,6 @@ accessToken: mapboxgl.accessToken
 );
 
 </script>
- 
+
 </body>
 </html>
