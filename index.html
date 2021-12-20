@@ -1849,23 +1849,28 @@ map.on('load', () => {
 // Add a custom vector tileset source. This tileset contains
 // point features representing all footways in Munich. 
   
-map.addSource('footways', {
+// Add the Mapbox Terrain v2 vector tileset. Read more about
+// the structure of data in this tileset in the documentation:
+// https://docs.mapbox.com/vector-tiles/reference/mapbox-terrain-v2/
+map.addSource('steps', {
 type: 'vector',
-url: 'mapbox://poorni-badrinath.ckxewt3cm1htz29mpzwggtwo8-4to82'
+url: 'mapbox://poorni-badrinath.ckv9d1um40ape23nsylhvugpt-3qmsb'
 });
 map.addLayer({
-'id': 'footways',
-'type': 'circle',
-'source': 'footways',
+'id': 'steps',
+'type': 'line',
+'source': 'steps',
+'source-layer': 'stepsandramps',
 'layout': {
 // Make the layer visible by default.
-'visibility': 'visible'
+'visibility': 'visible',
+'line-join': 'round',
+'line-cap': 'round'
 },
 'paint': {
-'circle-radius': 2,
-'circle-color': 'rgba(55,148,179,1)'
-},
-'source-layer': 'footways12'
+'line-color': '#D35400 ',
+'line-width': 2
+}
 });
       
 // Add the Mapbox Terrain v2 vector tileset. Read more about
@@ -1895,12 +1900,12 @@ map.addLayer({
 // After the last frame rendered before the map enters an "idle" state.
 map.on('idle', () => {
 // If these two layers were not added to the map, abort
-if (!map.getLayer('wheelchairaccess') || !map.getLayer('footways')) {
+if (!map.getLayer('wheelchairaccess') || !map.getLayer('steps')) {
 return;
 }
  
 // Enumerate ids of the layers.
-const toggleableLayerIds = ['wheelchairaccess', 'footways'];
+const toggleableLayerIds = ['wheelchairaccess', 'steps'];
  
 // Set up the corresponding toggle button for each layer.
 for (const id of toggleableLayerIds) {
