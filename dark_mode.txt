@@ -19,5 +19,5 @@ map.addLayer({
 },'admin-1-boundary');
 });
 
-// You can also add this one line to create a butto for full-screen mode:
+// You can also add this one line to create a button for full-screen mode:
 map.addControl(new mapboxgl.FullscreenControl());
