@@ -1,0 +1,20 @@
+
+map.addSource('black_polygon', {
+type: 'vector',
+url: 'mapbox://shegl.ckyn267365lm020o8cvixma2m-1qus5'
+});
+map.addLayer({
+'id': 'black_polygon',
+'type': 'fill',
+'source': 'black_polygon',
+'source-layer': 'dark_polygon',
+'layout': {
+// Make the layer visible by default.
+'visibility': 'visible',
+},
+'paint': {
+'fill-color': '#000',
+'fill-opacity': 0.4
+}
+},'admin-1-boundary');
+});
