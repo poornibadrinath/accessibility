@@ -1,4 +1,4 @@
-// Hey Poorni, add this to the <script> part
+// Hey Poorni, put this with the other stuff inside this: map.on('load', () => {
 map.addSource('black_polygon', {
 type: 'vector',
 url: 'mapbox://shegl.ckyn267365lm020o8cvixma2m-1qus5'
@@ -17,7 +17,6 @@ map.addLayer({
 'fill-opacity': 0.4
 }
 },'admin-1-boundary');
-});
 
-// You can also add this one line to create a button for full-screen mode:
+// You can also add this one line somewhere in the body to create a button for full-screen mode:
 map.addControl(new mapboxgl.FullscreenControl());
