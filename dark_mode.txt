@@ -1,4 +1,4 @@
-
+// Hey Poorni, add this to the <script> part
 map.addSource('black_polygon', {
 type: 'vector',
 url: 'mapbox://shegl.ckyn267365lm020o8cvixma2m-1qus5'
@@ -18,3 +18,6 @@ map.addLayer({
 }
 },'admin-1-boundary');
 });
+
+// You can also add this one line to create a butto for full-screen mode:
+map.addControl(new mapboxgl.FullscreenControl());
