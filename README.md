@@ -46,42 +46,53 @@ _Night map with all the lit vs non lit streets!_
 _Directions including the lit streets into consideration when suggesting navigation!_ 
 
 
-## Welcome to GitHub Pages
+## Impact 
 
-You can use the [editor on GitHub](https://github.com/poornibadrinath/accessibility/edit/main/README.md) to maintain and preview the content for your website in Markdown files.
+- The routing API uses the Mapbox directions API on one end, which is the blue route that has four profiles currently. The other route (the green route) uses the OpenStreetMap routing API, which is updated faster and easier owing to millions of worldwide contributors that add the missing data. When you fill the gaps of missing accessiblity data you can see the difference between the routes and how the direction changes to inlude the newer parameters into place. 
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+For eg: 
 
-### Markdown
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+![ComparisonRoutes](https://user-images.githubusercontent.com/17887418/151718824-2fb3aa92-83d4-4220-81e6-b4e06db11374.png)
 
-```markdown
-Syntax highlighted code block
+With Munich and Vienna, the difference is very clear when the routes are updated. The green route or the OSM route shows a clear direction completely from origin till the end point of the destination, where the blue route or the Mapbox API restricts itself till the point where the data is available. 
 
-## Header 2
-### Header 3
+However with Bengaluru, both the routes are not clear because of missing datapoints of accessibility, causing a lot of confusion in how the routes are built. 
 
-- Bulleted
-- List
+With around 10 routes - origin and destination combinations checked across Munich, Vienna, and Bengaluru each: 
 
-1. Numbered
-2. List
+- 9/10 routes were precise in Munich with OSM API 
+- 7/10 routes were precise in Vienna 
+- 2/10 routes were precise in Bengaluru (the reason being a lot of missing accessibility data that hasn't been updated on the map. 
 
-**Bold** and _Italic_ and `Code` text
+### Impact percentage: 
 
-[Link](url) and ![Image](src)
-```
+- Munich - **90%**
+- Vienna - **70%**
+- Bengaluru - **20%**
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
-### Jekyll Themes
+### Next actions: 
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/poornibadrinath/accessibility/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+We will continue to improvise this tool and make it as a mobile API if possible. The idea is to have a clickable profile for different modes of accessibility, easier access and safety protocols for users to choose from. Specifically for continous navigation places like indoor malls for food deliveries, underground parking garages and places with multiple entries and different buildings like the TUM campus. 
 
-### Support or Contact
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+![image](https://user-images.githubusercontent.com/17887418/151719306-a40132f7-c61f-4668-9ffc-961578a802f0.png)
+
+Our end goal would be to create a complete different mode for accessibility data as seen in the above image and add a safety mode for night travel that allows us to access street safety data and the timings for night public transport options, emergency services etc. 
+
+![image](https://user-images.githubusercontent.com/17887418/151719362-2d0036c8-804d-4658-9e53-8c049ce82f6f.png)
+
+![image](https://user-images.githubusercontent.com/17887418/151719372-7420b065-b1b3-474a-bfd6-7554ad497b62.png)
+
+### References: (Links to be updated)  
+
+- Mapbox GL JS 
+- Mapbox map matching API.
+- Wheelchair mode activated google 
+- OpenStreetMap
+- Mapbox Studio
+- Last mile connectivity 
 
 
 Accessbility page link: https://poornibadrinath.github.io/accessibility/
