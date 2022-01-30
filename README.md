@@ -4,6 +4,10 @@
 
 ### Understanding the importance of precise navigation until the doorstep! 
 
+
+![image](https://user-images.githubusercontent.com/17887418/151721121-2a4ff4c0-535d-4d51-800b-831eddc7da41.png)
+
+
 Ever been really hungry, ordered food and wondered where the food delivery person got lost while picking up your food? Ever been dropped off at a wrong location and having to walk down all the way to the actual location, being thoroughly confused as to where it is? Ever had any parcel delayed because the address or the entrance of the building is not clear? Ever had to find an alternative route because the route suggested was not accessible? 
 
 Then you understand the importance of last mile connectivity! 
