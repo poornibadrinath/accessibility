@@ -1,6 +1,6 @@
 # Last Mile Connectivity! 
 
-**By: Oscar Baumann, Poornima Badrinath**
+**By: Oskar Baumann, Poornima Badrinath**
 
 ### Understanding the importance of precise navigation until the doorstep! 
 
