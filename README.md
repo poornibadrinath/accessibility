@@ -69,7 +69,7 @@ With around 10 routes - origin and destination combinations checked across Munic
 
 - 9/10 routes were precise in Munich with OSM API 
 - 7/10 routes were precise in Vienna 
-- 2/10 routes were precise in Bengaluru (the reason being a lot of missing accessibility data that hasn't been updated on the map. 
+- 2/10 routes were precise in Bengaluru (the reason being a lot of missing accessibility data that hasn't been updated on the map) 
 
 ### Impact percentage: 
 
