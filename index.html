@@ -25,7 +25,9 @@
   <link rel="stylesheet" href="style.css">
 </head>
 
-<style>body {
+<style>
+
+body {
   margin: 0;
   padding: 0;
   font-family: sans-serif;
@@ -125,33 +127,55 @@
   font-family: 'calibri', sans-serif;
   z-index: 1000;
 }
+
+#legend {
+position: absolute;
+padding: 10px;
+box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+line-height: 18px;
+height: 150px;
+margin-bottom: 100px;
+width: 200px;
+top: 200px;
+background-color: #eceef1e5;
+}
+
+.legend-key {
+display: inline-block;
+border-radius: 20%;
+width: 10px;
+height: 10px;
+margin-right: 5px;
+}
+
 </style>
 
 <body>
-
-  <div id="toggle">
-
-     <input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked="checked">
-    <label>Day</label>
-      <input id="ckyvs9vi2003s14o4r353jqhh" type="radio" name="rtoggle" value="dark">
-      <label for="dark-v10">Night</label>
-  
-
-   <!--<input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked="checked">
-    <label>Our first basemap</label>
-    mapbox://styles/poorni-badrinath/ckyugychf001y14o0a03va5ki 
-
-    Day: mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j
-    Night: mapbox://styles/poorni-badrinath/ckyvs9vi2003s14o4r353jqhh
-    
-    mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j*/--> 
-
-  </div>
-
-  <!-- Create a container for the map -->
+ <!-- Create a container for the map -->
+ 
   <div id="map"></div>
   <nav id="menu"></nav>
   <div id="menu"></div>
+  
+
+  <div id="toggle">
+
+    <input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked="checked">
+   <label>Day</label>
+     <input id="ckyvs9vi2003s14o4r353jqhh" type="radio" name="rtoggle" value="dark">
+     <label for="dark-v10">Night</label>
+ 
+
+  <!--<input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked="checked">
+   <label>Our first basemap</label>
+   mapbox://styles/poorni-badrinath/ckyugychf001y14o0a03va5ki 
+
+   Day: mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j
+   Night: mapbox://styles/poorni-badrinath/ckyvs9vi2003s14o4r353jqhh
+   
+   mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j*/--> 
+
+ </div>
 
  <!-- <div class="overlay">
     <button id="replay">Replay</button>
@@ -167,9 +191,13 @@
         <p>
           Happy Exploring!!! 
           </p> 
+;
 
     <div id="directions"></div>
   </div>
+
+  <div class="map-overlay" id="legend"></div>
+
 
   <script>
     // Add your Mapbox access token
@@ -179,7 +207,7 @@
       container: 'map',
       style: 'mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j',
       center: [-159.434710, 0.000000],
-      zoom: 10.5
+      zoom: 1
     });
 
     const popup = new mapboxgl.Popup({ closeOnClick: false })
@@ -187,6 +215,19 @@
 .setHTML('<h2>Understanding Last Mile Connectivity!</h2><p1>Last Mile Connectivity is ensuring that the user has precise directions from the origin to destination, factoring in all the modes of transport and as well as walking instructions to the origin point and the destination point!</p1>')
 .addTo(map);
 
+// define layer names
+const layers = [
+'Blue Route - Mapbox Directions',
+'Green Route - OSM API ',
+'Purple Dots - Wheelchair Data',
+'Orange Lines - Steps and Ramps',
+];
+const colors = [
+'#2E86C1 ',
+'#1E8449',
+'#6C3483',
+'#D35400',
+];
 
 // Add the control to the map.
 map.addControl(
@@ -2217,6 +2258,22 @@ mapboxgl: mapboxgl
       }
     })
 
+    // create legend
+const legend = document.getElementById('legend');
+ 
+ layers.forEach((layer, i) => {
+ const color = colors[i];
+ const item = document.createElement('div');
+ const key = document.createElement('span');
+ key.className = 'legend-key';
+ key.style.backgroundColor = color;
+  
+ const value = document.createElement('span');
+ value.innerHTML = `${layer}`;
+ item.appendChild(key);
+ item.appendChild(value);
+ legend.appendChild(item);
+ });
 
     
     map.addControl(
@@ -2225,8 +2282,6 @@ mapboxgl: mapboxgl
       }),
       'bottom-right'
     );
-
-    
 
     // Sandbox example how to keep data visible while changing background maps:
     // https://dev.to/dqunbp/effectively-switching-mapbox-gl-styles-1a3i
