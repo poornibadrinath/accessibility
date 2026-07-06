@@ -1,2286 +1,182 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
-  <title>Last Mile Connectivity:Understanding point to point navigation</title>
+  <title>Last Mile Connectivity: Understanding Point to Point Navigation</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Import Mapbox GL JS  -->
   <script src="https://api.tiles.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.js"></script>
   <link href="https://api.tiles.mapbox.com/mapbox-gl-js/v2.6.1/mapbox-gl.css" rel="stylesheet" />
+
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
+
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.0/mapbox-gl-directions.js"></script>
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.0/mapbox-gl-directions.css" type="text/css">
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-directions/v4.1.0/mapbox-gl-directions.css" />
 
-  <!-- Import Mapbox GL Draw -->
   <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.js"></script>
-  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css" type="text/css" />
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-draw/v1.0.9/mapbox-gl-draw.css" />
 
-<!-- Load the `mapbox-gl-geocoder` plugin. -->
-<script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
-<link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" type="text/css">
+  <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.min.js"></script>
+  <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v4.7.2/mapbox-gl-geocoder.css" />
 
-  <!-- Import custom stylesheet -->
-  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: sans-serif;
+    }
+
+    #map {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 100%;
+    }
+
+    #layer-menu {
+      background: #fff;
+      position: absolute;
+      z-index: 2;
+      top: 120px;
+      right: 10px;
+      border-radius: 3px;
+      width: 130px;
+      border: 1px solid rgba(0, 0, 0, 0.4);
+      font-family: 'Open Sans', sans-serif;
+    }
+
+    #layer-menu a {
+      font-size: 10px;
+      color: #404040;
+      display: block;
+      padding: 10px;
+      text-decoration: none;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.25);
+      text-align: center;
+    }
+
+    #layer-menu a:last-child {
+      border: none;
+    }
+
+    #layer-menu a:hover {
+      background-color: #f8f8f8;
+    }
+
+    #layer-menu a.active {
+      background-color: #3887be;
+      color: #ffffff;
+    }
+
+    #toggle {
+      position: fixed;
+      background: #2b667e;
+      z-index: 1000;
+      display: block;
+      margin: 0;
+      padding: 8px;
+      border: 2px solid rgba(8, 67, 90, 0.4);
+      font-family: calibri, sans-serif;
+      color: white;
+    }
+
+    #legend {
+      position: fixed;
+      padding: 10px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      line-height: 18px;
+      height: 120px;
+      margin-bottom: 10px;
+      width: 200px;
+      bottom: 20px;
+      left: 10px;
+      background-color: #eceef1e5;
+      z-index: 2;
+    }
+
+    .legend-key {
+      display: inline-block;
+      border-radius: 20%;
+      width: 10px;
+      height: 10px;
+      margin-right: 5px;
+    }
+
+    .info-box {
+      position: fixed;
+      margin: 20px;
+      width: 25%;
+      top: 30px;
+      max-height: 250px;
+      padding: 10px;
+      background-color: #ffffffa8;
+      overflow-y: auto;
+      z-index: 2;
+    }
+  </style>
 </head>
 
-<style>
-
-body {
-  margin: 0;
-  padding: 0;
-  font-family: sans-serif;
-}
-
-#map {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 100%;
-}
-
-.overlay {
-  position: fixed;
-  bottom: 30px;
-  left: 10px;
-}
-
-.overlay button {
-  font: 600 8px/10px 'Helvetica Neue', Arial, Helvetica, sans-serif;
-  background-color: #3386c0;
-  color: #fff;
-  display: inline-block;
-  margin: 0;
-  padding: 8px 10px;
-  border: none;
-  cursor: pointer;
-  border-radius: 25px;
-}
-
-.overlay button:hover {
-  background-color: #4ea0da;
-}
-
-#menu {
-  background: #fff;
-  position: absolute;
-  z-index: 1;
-  top: 60px;
-  right: 50px;
-  border-radius: 3px;
-  width: 100px;
-  border: 1px solid rgba(0, 0, 0, 0.4);
-  font-family: 'Open Sans', sans-serif;
-}
-
-#menu a {
-  font-size: 10px;
-  color: #404040;
-  display: block;
-  margin: 0;
-  padding: 0;
-  padding: 10px;
-  text-decoration: none;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.25);
-  text-align: center;
-}
-
-#menu a:last-child {
-  border: none;
-}
-
-#menu a:hover {
-  background-color: #f8f8f8;
-  color: #404040;
-}
-
-#menu a.active {
-  background-color: #3887be;
-  color: #ffffff;
-}
-
-#menu a.active:hover {
-  background: #3074a4;
-}
-
-#toggle {
-  position: fixed;
-  background: #2b667e;
-  z-index: 10;
-  display: block;
-  margin: 0;
-  padding: 0;
-  padding: 8px;
-  border: 2px solid rgba(8, 67, 90, 0.4);
-  font-family: 'calibri', sans-serif;
-  z-index: 1000;
-}
-
-#legend {
-position: fixed;
-padding: 10px;
-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-line-height: 18px;
-height: 120px;
-margin-bottom: 10px;
-width: 200px;
-top: 700px;
-left: 10px;
-background-color: #eceef1e5;
-}
-
-.legend-key {
-display: inline-block;
-border-radius: 20%;
-width: 10px;
-height: 10px;
-margin-right: 5px;
-}
-
-.info-box {
-  position: fixed;
-  margin: 20px;
-  width: 25%;
-  top: 30px;
-  bottom: 720px;
-  padding: 10px;
-  background-color: #ffffffa8;
-  overflow-y: scroll;
-}
-
-</style>
-
 <body>
- <!-- Create a container for the map -->
- 
   <div id="map"></div>
-  <nav id="menu"></nav>
-  <div id="menu"></div>
-  
+
+  <nav id="layer-menu"></nav>
 
   <div id="toggle">
-
-    <input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked="checked">
+    <input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked>
     <label>Day</label>
-    <input id="ckyvs9vi2003s14o4r353jqhh" type="radio" name="rtoggle" value="dark">
-    <label for="dark-v10">Night</label>
-    <input id="cmr8x7uxi000101qw734mesbf" type="radio" name="rtoggle" value="fun">
-    <label for="cmr8x7uxi000101qw734mesbf">Blue</label>
-    <input id="cjes38rm70gdq2snurl4fercr" type="radio" name="rtoggle" value="fun">
-    <label for="cjes38rm70gdq2snurl4fercr">Candyland</label>
-    
- 
 
-  <!--<input id="ckyu1koq5001615pq10qss11j" type="radio" name="rtoggle" checked="checked">
-   <label>Our first basemap</label>
-   mapbox://styles/poorni-badrinath/ckyugychf001y14o0a03va5ki 
+    <input id="ckyvs9vi2003s14o4r353jqhh" type="radio" name="rtoggle">
+    <label>Night</label>
 
-   Day: mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j
-   Night: mapbox://styles/poorni-badrinath/ckyvs9vi2003s14o4r353jqhh
-   Manhattan: mapbox://styles/poorni-badrinath/cmr8x7uxi000101qw734mesbf
-   Candyland: mapbox://styles/poorni-badrinath/cjes38rm70gdq2snurl4fercr
-   mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j*/--> 
+    <input id="cmr8x7uxi000101qw734mesbf" type="radio" name="rtoggle">
+    <label>Blue</label>
 
- </div>
+    <input id="cjes38rm70gdq2snurl4fercr" type="radio" name="rtoggle">
+    <label>Candyland</label>
+  </div>
 
- <!-- <div class="overlay">
-    <button id="replay">Replay</button>
-  </div> -->
-
-  <!-- Create a container for the instructions and directions -->
   <div class="info-box">
-   <p>
-        Click on the map, at the desired locations for the OpenStreetMap API to query and display the route!
-        </p>
-
-        <p>
-          Happy Exploring!!! 
-          </p> 
-
+    <p>
+      Click on the map at the desired locations for the OpenStreetMap API to query and display the route!
+    </p>
+    <p>Happy Exploring!!!</p>
     <div id="directions"></div>
   </div>
 
   <div class="map-overlay" id="legend"></div>
 
-
   <script>
-    // Add your Mapbox access token
     mapboxgl.accessToken = 'pk.eyJ1IjoicG9vcm5pLWJhZHJpbmF0aCIsImEiOiJjbXI0ejAzdHIwY3UxNDhzampibmkwdmtiIn0.jICjb-T8m48aSQX34yc9kw';
 
     const map = new mapboxgl.Map({
       container: 'map',
       style: 'mapbox://styles/poorni-badrinath/ckyu1koq5001615pq10qss11j',
-      center: [12.8545315,48.4793267],
+      center: [12.8545315, 48.4793267],
       zoom: 1
     });
 
     const popup = new mapboxgl.Popup({ closeOnClick: false })
-.setLngLat([12.8545315,48.4793267])
-.setHTML('<h2>Understanding Last Mile Connectivity!</h2><p1>Last Mile Connectivity is ensuring that the user has precise directions from the origin to destination, factoring in all the modes of transport and as well as walking instructions to the origin point and the destination point!</p1>')
-.addTo(map);
+      .setLngLat([12.8545315, 48.4793267])
+      .setHTML(`
+        <h2>Understanding Last Mile Connectivity!</h2>
+        <p>
+          Last Mile Connectivity is ensuring that the user has precise directions from the origin to destination,
+          factoring in all modes of transport as well as walking instructions to the origin point and destination point.
+        </p>
+      `)
+      .addTo(map);
 
-// define layer names
-const layers = [
-'Blue Route - Mapbox Directions',
-'Green Route - OSM API ',
-'Purple Dots - Wheelchair Data',
-'Orange Lines - Steps and Ramps',
-];
-const colors = [
-'#2E86C1 ',
-'#1E8449',
-'#6C3483',
-'#D35400',
-];
+    map.addControl(
+      new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl,
+        marker: true
+      }),
+      'top-right'
+    );
 
-// Add the control to the map.
-map.addControl(
-new MapboxGeocoder({
-accessToken: mapboxgl.accessToken,
-mapboxgl: mapboxgl
-}),
-'top-right'
-);
+    map.addControl(new mapboxgl.FullscreenControl());
 
-    const draw = new MapboxDraw({
-      // Instead of showing all the draw tools, show only the line string and delete tools
-      displayControlsDefault: false,
-      controls: {
-        line_string: true,
-        trash: true
-      },
-      // Set the draw mode to draw LineStrings by default
-      defaultMode: 'draw_line_string',
-      styles: [
-        // Set the line style for the user-input coordinates
-        {
-          'id': 'gl-draw-line',
-          'type': 'line',
-          'filter': [
-            'all',
-            ['==', '$type', 'LineString'],
-            ['!=', 'mode', 'static']
-          ],
-          'layout': {
-            'line-cap': 'round',
-            'line-join': 'round'
-          },
-          'paint': {
-            'line-color': '#9ACD32',
-            'line-dasharray': [0.2, 2],
-            'line-width': 1.5,
-            'line-opacity': 0.8
-          }
-        },
-        // Style the vertex point halos
-        {
-          'id': 'gl-draw-polygon-and-line-vertex-halo-active',
-          'type': 'circle',
-          'filter': [
-            'all',
-            ['==', 'meta', 'vertex'],
-            ['==', '$type', 'Point'],
-            ['!=', 'mode', 'static']
-          ],
-          'paint': {
-            'circle-radius': 12,
-            'circle-color': '#FFF'
-          }
-        },
-        // Style the vertex points
-        {
-          'id': 'gl-draw-polygon-and-line-vertex-active',
-          'type': 'circle',
-          'filter': [
-            'all',
-            ['==', 'meta', 'vertex'],
-            ['==', '$type', 'Point'],
-            ['!=', 'mode', 'static']
-          ],
-          'paint': {
-            'circle-radius': 8,
-            'circle-color': '#438EE4'
-          }
-        }
-      ]
-    });
-
-    // Add the draw tool to the map
-    map.addControl(draw);
-
-    // Add create, update, or delete actions
-    map.on('draw.create', updateRoute);
-    map.on('draw.update', updateRoute);
-    map.on('draw.delete', removeRoute);
-
-    // Use the coordinates you just drew to make the Map Matching API request
-    function updateRoute() {
-      removeRoute(); // Overwrite any existing layers
-
-      const profile = 'walking'; // Set the profile
-
-      // Get the coordinates
-      const data = draw.getAll();
-      const lastFeature = data.features.length - 1;
-      const coords = data.features[lastFeature].geometry.coordinates;
-      // Format the coordinates
-      const newCoords = coords.join(';');
-      // Set the radius for each coordinate pair to 25 meters
-      const radius = coords.map(() => 25);
-      getMatch(newCoords, radius, profile);
-    }
-
-    // Make a Map Matching request
-    async function getMatch(coordinates, radius, profile) {
-      // Separate the radiuses with semicolons
-      const radiuses = radius.join(';');
-      // Create the query
-      const query = await fetch(
-        `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=true&access_token=${mapboxgl.accessToken}`, {
-          method: 'GET'
-        }
-      );
-      const response = await query.json();
-      // Handle errors
-      if (response.code !== 'Ok') {
-        alert(
-          `${response.code} - ${response.message}.\n\nFor more information: https://docs.mapbox.com/api/navigation/map-matching/#map-matching-api-errors`
-        );
-        return;
-      }
-      const coords = response.matchings[0].geometry;
-      // Draw the route on the map
-      addRoute(coords);
-      getInstructions(response.matchings[0]);
-    }
-
-    function getInstructions(data) {
-      // Target the sidebar to add the instructions
-      const directions = document.getElementById('directions');
-      let tripDirections = '';
-      // Output the instructions for each step of each leg in the response object
-      for (const leg of data.legs) {
-        const steps = leg.steps;
-        for (const step of steps) {
-          tripDirections += `<li>${step.maneuver.instruction}</li>`;
-        }
-      }
-      directions.innerHTML = `<p><strong>Trip duration: ${Math.floor(
-          data.duration / 60
-        )} min.</strong></p><ol>${tripDirections}</ol>`;
-    }
-
-    // Draw the Map Matching route as a new layer on the map
-    function addRoute(coords) {
-      // If a route is already loaded, remove it
-      if (map.getSource('route')) {
-        map.removeLayer('route');
-        map.removeSource('route');
-      } else {
-        map.addLayer({
-          'id': 'route',
-          'type': 'line',
-          'source': {
-            'type': 'geojson',
-            'data': {
-              'type': 'Feature',
-              'properties': {},
-              'geometry': coords
-            }
-          },
-          'layout': {
-            'line-join': 'round',
-            'line-cap': 'round'
-          },
-          'paint': {
-            'line-color': '#03AA46',
-            'line-width': 8,
-            'line-opacity': 0.8
-          }
-        });
-      }
-    }
-
-    // If the user clicks the delete draw button, remove the layer if it exists
-    function removeRoute() {
-      if (!map.getSource('route')) return;
-      map.removeLayer('route');
-      map.removeSource('route');
-    }
-
-   /*// Olschewskibogen
-    const origin = [11.5599, 48.2006];
-
-    // Obere Au
-    const destination = [11.5967, 48.1232];
-
-    // A simple line from origin to destination.
-    const route = {
-      'type': 'FeatureCollection',
-      'features': [{
-        'type': 'Feature',
-        'geometry': {
-          'type': 'LineString',
-          'coordinates': [
-            [
-              11.559918522834776,
-              48.200568597521325
-            ],
-            [
-              11.559918522834776,
-              48.20048636051569
-            ],
-            [
-              11.559121906757355,
-              48.200439878671496
-            ],
-            [
-              11.559089720249176,
-              48.20058826287268
-            ],
-            [
-              11.55905485153198,
-              48.20078134046689
-            ],
-            [
-              11.558931469917296,
-              48.20075631193093
-            ],
-            [
-              11.558904647827148,
-              48.20107453097765
-            ],
-            [
-              11.558910012245178,
-              48.2011299509466
-            ],
-            [
-              11.558934152126312,
-              48.20116034251702
-            ],
-            [
-              11.55900925397873,
-              48.201180007641206
-            ],
-            [
-              11.559910476207733,
-              48.20118894633155
-            ],
-            [
-              11.560792922973633,
-              48.20119967275786
-            ],
-            [
-              11.561788022518158,
-              48.20123363975974
-            ],
-            [
-              11.562445163726807,
-              48.20125151712009
-            ],
-            [
-              11.563263237476349,
-              48.20127296994429
-            ],
-            [
-              11.56411349773407,
-              48.201264031268636
-            ],
-            [
-              11.564137637615204,
-              48.20099944576279
-            ],
-            [
-              11.564175188541412,
-              48.20078134046689
-            ],
-            [
-              11.564193964004515,
-              48.200568597521325
-            ],
-            [
-              11.56421810388565,
-              48.20042557655709
-            ],
-            [
-              11.564266383647919,
-              48.20021104436207
-            ],
-            [
-              11.564314663410185,
-              48.1998534887072
-            ],
-            [
-              11.564384400844574,
-              48.1994119040292
-            ],
-            [
-              11.564421951770782,
-              48.19911334057192
-            ],
-            [
-              11.564456820487976,
-              48.19880047280652
-            ],
-            [
-              11.564507782459259,
-              48.19843218030286
-            ],
-            [
-              11.564531922340393,
-              48.198226578967194
-            ],
-            [
-              11.564572155475616,
-              48.197958402071976
-            ],
-            [
-              11.564604341983793,
-              48.197643739391715
-            ],
-            [
-              11.564641892910002,
-              48.19729152944028
-            ],
-            [
-              11.564690172672272,
-              48.19694825649776
-            ],
-            [
-              11.5647491812706,
-              48.196486979859486
-            ],
-            [
-              11.564784049987793,
-              48.19613833778417
-            ],
-            [
-              11.564808189868925,
-              48.195854058643825
-            ],
-            [
-              11.564856469631195,
-              48.1954285309453
-            ],
-            [
-              11.564899384975433,
-              48.19503160696517
-            ],
-            [
-              11.564920842647552,
-              48.19467937905645
-            ],
-            [
-              11.56498521566391,
-              48.19462574007619
-            ],
-            [
-              11.565012037754057,
-              48.19430748097158
-            ],
-            [
-              11.565044224262238,
-              48.193998159835175
-            ],
-            [
-              11.565062999725342,
-              48.193826512618614
-            ],
-            [
-              11.565148830413818,
-              48.193257927106785
-            ],
-            [
-              11.565213203430176,
-              48.192719731863335
-            ],
-            [
-              11.565449237823486,
-              48.19099603862264
-            ],
-            [
-              11.565567255020142,
-              48.190143110876974
-            ],
-            [
-              11.565596759319305,
-              48.18981588325694
-            ],
-            [
-              11.565642356872559,
-              48.1894403735774
-            ],
-            [
-              11.56567186117172,
-              48.18912744674255
-            ],
-            [
-              11.56573086977005,
-              48.18880915348749
-            ],
-            [
-              11.565784513950348,
-              48.188428271881875
-            ],
-            [
-              11.56586229801178,
-              48.188033081871666
-            ],
-            [
-              11.565913259983063,
-              48.187645041656694
-            ],
-            [
-              11.565985679626465,
-              48.187224810460414
-            ],
-            [
-              11.566004455089569,
-              48.18712109329457
-            ],
-            [
-              11.566401422023773,
-              48.18715149317529
-            ],
-            [
-              11.567114889621735,
-              48.187196198849435
-            ],
-            [
-              11.568552553653717,
-              48.18729991586328
-            ],
-            [
-              11.569182872772217,
-              48.187332103859376
-            ],
-            [
-              11.569676399230957,
-              48.18734640962892
-            ],
-            [
-              11.570234298706053,
-              48.187364291835245
-            ],
-            [
-              11.570770740509031,
-              48.187383962255
-            ],
-            [
-              11.571293771266937,
-              48.1873982680101
-            ],
-            [
-              11.571806073188782,
-              48.18741257376117
-            ],
-            [
-              11.572366654872894,
-              48.18744118525137
-            ],
-            [
-              11.572650969028473,
-              48.18744118525137
-            ],
-            [
-              11.572924554347992,
-              48.18746085564161
-            ],
-            [
-              11.573632657527924,
-              48.18748946710486
-            ],
-            [
-              11.574225425720215,
-              48.187503772830496
-            ],
-            [
-              11.575185656547546,
-              48.18753774891286
-            ],
-            [
-              11.576038599014282,
-              48.187569936759594
-            ],
-            [
-              11.577197313308716,
-              48.18760748922191
-            ],
-            [
-              11.578157544136047,
-              48.18763431239241
-            ],
-            [
-              11.57847136259079,
-              48.18765398270854
-            ],
-            [
-              11.579756140708923,
-              48.18769868794437
-            ],
-            [
-              11.58158540725708,
-              48.18775233417592
-            ],
-            [
-              11.581939458847046,
-              48.18772014644372
-            ],
-            [
-              11.583291292190552,
-              48.18777736906474
-            ],
-            [
-              11.58429443836212,
-              48.187813133170415
-            ],
-            [
-              11.584331989288328,
-              48.187133610894705
-            ],
-            [
-              11.584396362304688,
-              48.18650772714366
-            ],
-            [
-              11.584455370903013,
-              48.18580672826846
-            ],
-            [
-              11.584530472755432,
-              48.18493046619177
-            ],
-            [
-              11.58460021018982,
-              48.184018422405565
-            ],
-            [
-              11.584745049476622,
-              48.18260561665803
-            ],
-            [
-              11.58482015132904,
-              48.18172214618709
-            ],
-            [
-              11.584986448287964,
-              48.18018050740152
-            ],
-            [
-              11.585056185722351,
-              48.17908952850785
-            ],
-            [
-              11.585174202919006,
-              48.178070068230184
-            ],
-            [
-              11.585136651992798,
-              48.177766014749
-            ],
-            [
-              11.58506691455841,
-              48.17763723861336
-            ],
-            [
-              11.585011929273604,
-              48.177427082419584
-            ],
-            [
-              11.585001200437546,
-              48.17734212541589
-            ],
-            [
-              11.585054844617842,
-              48.177337653990755
-            ],
-            [
-              11.585194319486618,
-              48.17731976828625
-            ],
-            [
-              11.585355252027512,
-              48.177326028283545
-            ],
-            [
-              11.585489362478256,
-              48.17735732825847
-            ],
-            [
-              11.585682481527328,
-              48.177409196746304
-            ],
-            [
-              11.585843414068222,
-              48.177433342403766
-            ],
-            [
-              11.586065366864204,
-              48.17745122806865
-            ],
-            [
-              11.586127057671547,
-              48.177455699483865
-            ],
-            [
-              11.586265191435814,
-              48.1774485452193
-            ],
-            [
-              11.586716473102568,
-              48.177424399568984
-            ],
-            [
-              11.587086617946623,
-              48.177392205350884
-            ],
-            [
-              11.587488949298859,
-              48.17733497113547
-            ],
-            [
-              11.588215827941895,
-              48.17720261676757
-            ],
-            [
-              11.588564515113829,
-              48.177116765103015
-            ],
-            [
-              11.588881015777588,
-              48.17703091329469
-            ],
-            [
-              11.58945769071579,
-              48.17682701467376
-            ],
-            [
-              11.589790284633636,
-              48.17670717914099
-            ],
-            [
-              11.590023636817932,
-              48.17663384681116
-            ],
-            [
-              11.59034013748169,
-              48.176512222228006
-            ],
-            [
-              11.590903401374817,
-              48.17627791523246
-            ],
-            [
-              11.591163575649261,
-              48.17618311896819
-            ],
-            [
-              11.591319143772123,
-              48.17614734674744
-            ],
-            [
-              11.591984331607819,
-              48.17586474532611
-            ],
-            [
-              11.592496633529663,
-              48.17564653303632
-            ],
-            [
-              11.593033075332642,
-              48.17541758799624
-            ],
-            [
-              11.594030857086182,
-              48.174972215419295
-            ],
-            [
-              11.594250798225403,
-              48.17491497850238
-            ],
-            [
-              11.595479249954224,
-              48.174313987016994
-            ],
-            [
-              11.596770733594894,
-              48.17365575016469
-            ],
-            [
-              11.597013473510742,
-              48.17353411851702
-            ],
-            [
-              11.597185134887695,
-              48.173450943768316
-            ],
-            [
-              11.597611606121061,
-              48.173235404275545
-            ],
-            [
-              11.598027348518372,
-              48.17302791311958
-            ],
-            [
-              11.598451137542725,
-              48.17279895638686
-            ],
-            [
-              11.598786413669586,
-              48.17263081563521
-            ],
-            [
-              11.59918338060379,
-              48.17242153329117
-            ],
-            [
-              11.599373817443848,
-              48.172312419935444
-            ],
-            [
-              11.59955620765686,
-              48.17218720760178
-            ],
-            [
-              11.59969836473465,
-              48.17205305119073
-            ],
-            [
-              11.599856615066528,
-              48.171841977726814
-            ],
-            [
-              11.599937081336975,
-              48.17168098890759
-            ],
-            [
-              11.599982678890228,
-              48.17146812513733
-            ],
-            [
-              11.599971950054169,
-              48.171160454933066
-            ],
-            [
-              11.599872708320616,
-              48.170904657950906
-            ],
-            [
-              11.599743962287903,
-              48.17067748054033
-            ],
-            [
-              11.59955084323883,
-              48.170403793031944
-            ],
-            [
-              11.599344313144684,
-              48.170105060554874
-            ],
-            [
-              11.599094867706299,
-              48.16974013947915
-            ],
-            [
-              11.598807871341705,
-              48.1693269168907
-            ],
-            [
-              11.598590612411499,
-              48.16901207839799
-            ],
-            [
-              11.598384082317352,
-              48.16870976007177
-            ],
-            [
-              11.598161458969116,
-              48.16839312890815
-            ],
-            [
-              11.59789592027664,
-              48.16800672890752
-            ],
-            [
-              11.597496271133423,
-              48.16743249019523
-            ],
-            [
-              11.597260236740112,
-              48.1670943840209
-            ],
-            [
-              11.596911549568174,
-              48.166604215556205
-            ],
-            [
-              11.59667283296585,
-              48.16624105852666
-            ],
-            [
-              11.59643143415451,
-              48.16590115552893
-            ],
-            [
-              11.596211493015288,
-              48.16541813160459
-            ],
-            [
-              11.596082746982574,
-              48.16511579209277
-            ],
-            [
-              11.596031785011292,
-              48.16497803917985
-            ],
-            [
-              11.59594863653183,
-              48.16460950359395
-            ],
-            [
-              11.595956683158875,
-              48.164242754387
-            ],
-            [
-              11.595999598503113,
-              48.163988711935616
-            ],
-            [
-              11.596034467220306,
-              48.16382948750423
-            ],
-            [
-              11.596211493015288,
-              48.16346094366592
-            ],
-            [
-              11.596477031707764,
-              48.163135334770644
-            ],
-            [
-              11.596646010875702,
-              48.16294927161674
-            ],
-            [
-              11.596833765506744,
-              48.16276499686644
-            ],
-            [
-              11.597077846527098,
-              48.1625753541992
-            ],
-            [
-              11.597622334957123,
-              48.16225152877875
-            ],
-            [
-              11.598185598850248,
-              48.16193664685152
-            ],
-            [
-              11.59870058298111,
-              48.16166828004701
-            ],
-            [
-              11.599086821079254,
-              48.16144821821962
-            ],
-            [
-              11.599397957324982,
-              48.16127288373022
-            ],
-            [
-              11.599832475185393,
-              48.16101703743063
-            ],
-            [
-              11.60017043352127,
-              48.160791605367926
-            ],
-            [
-              11.60054862499237,
-              48.16051965425959
-            ],
-            [
-              11.600894629955292,
-              48.16023696671092
-            ],
-            [
-              11.60119503736496,
-              48.159943542544426
-            ],
-            [
-              11.601463258266449,
-              48.15962685726208
-            ],
-            [
-              11.601790487766266,
-              48.15919566116402
-            ],
-            [
-              11.602047979831694,
-              48.15883960854201
-            ],
-            [
-              11.602297425270079,
-              48.15854975483412
-            ],
-            [
-              11.602638065814972,
-              48.158177594585794
-            ],
-            [
-              11.602951884269713,
-              48.157925311343654
-            ],
-            [
-              11.603131592273712,
-              48.15779290687622
-            ],
-            [
-              11.60340517759323,
-              48.15759966731045
-            ],
-            [
-              11.603761911392212,
-              48.157406427016845
-            ],
-            [
-              11.604317128658295,
-              48.15715235070839
-            ],
-            [
-              11.604872345924377,
-              48.15691974453402
-            ],
-            [
-              11.605738699436188,
-              48.15658514764905
-            ],
-            [
-              11.606564819812775,
-              48.15625591649867
-            ],
-            [
-              11.607018113136292,
-              48.15606088183161
-            ],
-            [
-              11.607559919357298,
-              48.15583721730998
-            ],
-            [
-              11.608005166053772,
-              48.15565828499069
-            ],
-            [
-              11.608528196811676,
-              48.15545072271851
-            ],
-            [
-              11.609091460704803,
-              48.155216319487806
-            ],
-            [
-              11.609858572483061,
-              48.15489423696621
-            ],
-            [
-              11.610311865806578,
-              48.15469919712303
-            ],
-            [
-              11.610757112503052,
-              48.15449520970488
-            ],
-            [
-              11.610918045043945,
-              48.154412898762644
-            ],
-            [
-              11.611349880695343,
-              48.15421069958312
-            ],
-            [
-              11.611615419387817,
-              48.15408365367335
-            ],
-            [
-              11.611754894256592,
-              48.15402102529221
-            ],
-            [
-              11.611958742141724,
-              48.15393155604368
-            ],
-            [
-              11.612185388803482,
-              48.15383224499512
-            ],
-            [
-              11.612497866153717,
-              48.153686409503415
-            ],
-            [
-              11.612755358219147,
-              48.15354146829725
-            ],
-            [
-              11.61296859383583,
-              48.15342605185881
-            ],
-            [
-              11.61315768957138,
-              48.15329810930194
-            ],
-            [
-              11.61354124546051,
-              48.15304938090084
-            ],
-            [
-              11.613781303167343,
-              48.152896385494074
-            ],
-            [
-              11.61411926150322,
-              48.15267002303213
-            ],
-            [
-              11.614454537630081,
-              48.15244455429079
-            ],
-            [
-              11.614742875099182,
-              48.15224682096814
-            ],
-            [
-              11.615036576986313,
-              48.15202940290584
-            ],
-            [
-              11.615193486213684,
-              48.15187998337419
-            ],
-            [
-              11.615339666604996,
-              48.151726089749054
-            ],
-            [
-              11.615476459264755,
-              48.15157756406853
-            ],
-            [
-              11.615593135356903,
-              48.151435301116045
-            ],
-            [
-              11.615709811449051,
-              48.151259037665575
-            ],
-            [
-              11.615814417600632,
-              48.151097984237374
-            ],
-            [
-              11.615906953811646,
-              48.15092440386545
-            ],
-            [
-              11.61598339676857,
-              48.150758875644264
-            ],
-            [
-              11.616097390651703,
-              48.15046092350066
-            ],
-            [
-              11.616165786981583,
-              48.1502256027171
-            ],
-            [
-              11.616236865520477,
-              48.149793432840134
-            ],
-            [
-              11.616240888834,
-              48.14961090037034
-            ],
-            [
-              11.616243571043015,
-              48.14934604818127
-            ],
-            [
-              11.616244912147522,
-              48.149158145461506
-            ],
-            [
-              11.616234183311462,
-              48.14898724286659
-            ],
-            [
-              11.61622881889343,
-              48.14880470752931
-            ],
-            [
-              11.616227477788925,
-              48.14872954573114
-            ],
-            [
-              11.616212725639343,
-              48.14847453166705
-            ],
-            [
-              11.616197973489761,
-              48.148259781998625
-            ],
-            [
-              11.61617115139961,
-              48.14800655519341
-            ],
-            [
-              11.616118848323822,
-              48.14763700287861
-            ],
-            [
-              11.616090685129166,
-              48.14746699002412
-            ],
-            [
-              11.616042405366898,
-              48.14723344513212
-            ],
-            [
-              11.615976691246033,
-              48.146913102134064
-            ],
-            [
-              11.615902930498123,
-              48.146509538695476
-            ],
-            [
-              11.615809053182602,
-              48.146020963190985
-            ],
-            [
-              11.615754067897797,
-              48.14576146148977
-            ],
-            [
-              11.61567896604538,
-              48.145369521950286
-            ],
-            [
-              11.615633368492126,
-              48.145094804552954
-            ],
-            [
-              11.615573018789291,
-              48.14473954893063
-            ],
-            [
-              11.615516692399979,
-              48.14438339598973
-            ],
-            [
-              11.615493893623352,
-              48.14419726482633
-            ],
-            [
-              11.615438908338547,
-              48.143916277079946
-            ],
-            [
-              11.615326255559921,
-              48.14321022146373
-            ],
-            [
-              11.615268588066101,
-              48.1428451090465
-            ],
-            [
-              11.61524176597595,
-              48.14267060587107
-            ],
-            [
-              11.615205556154251,
-              48.14247999403228
-            ],
-            [
-              11.615181416273115,
-              48.14231264878284
-            ],
-            [
-              11.615149229764938,
-              48.14212829990862
-            ],
-            [
-              11.61512240767479,
-              48.14194842488348
-            ],
-            [
-              11.615063399076462,
-              48.14159851693445
-            ],
-            [
-              11.615039259195328,
-              48.141415955318585
-            ],
-            [
-              11.614997684955595,
-              48.14117432865218
-            ],
-            [
-              11.614972203969955,
-              48.14099892487819
-            ],
-            [
-              11.614930629730225,
-              48.14076535055484
-            ],
-            [
-              11.614886373281479,
-              48.14048255416632
-            ],
-            [
-              11.614831387996672,
-              48.14017917276425
-            ],
-            [
-              11.614793837070463,
-              48.13993664533918
-            ],
-            [
-              11.61474823951721,
-              48.13961357197109
-            ],
-            [
-              11.61471202969551,
-              48.13936030250736
-            ],
-            [
-              11.614667773246763,
-              48.139107926745886
-            ],
-            [
-              11.614626199007034,
-              48.13882601618365
-            ],
-            [
-              11.614607423543928,
-              48.13864702454704
-            ],
-            [
-              11.614595353603363,
-              48.13846713732348
-            ],
-            [
-              11.614584624767302,
-              48.13816463897916
-            ],
-            [
-              11.614584624767302,
-              48.138049187957684
-            ],
-            [
-              11.614604741334913,
-              48.1379086774495
-            ],
-            [
-              11.614658385515213,
-              48.13764913473532
-            ],
-            [
-              11.61473885178566,
-              48.13742360000098
-            ],
-            [
-              11.614813953638075,
-              48.13706918627386
-            ],
-            [
-              11.614839434623718,
-              48.1369018233856
-            ],
-            [
-              11.614893078804016,
-              48.13670582016514
-            ],
-            [
-              11.614925265312195,
-              48.136508921199415
-            ],
-            [
-              11.614965498447418,
-              48.13638630646196
-            ],
-            [
-              11.615037918090819,
-              48.13617329622184
-            ],
-            [
-              11.615088880062103,
-              48.136006825418995
-            ],
-            [
-              11.615178734064102,
-              48.135798288651706
-            ],
-            [
-              11.615318208932877,
-              48.135510094815274
-            ],
-            [
-              11.615440249443054,
-              48.13526486027687
-            ],
-            [
-              11.615538150072098,
-              48.135075115961676
-            ],
-            [
-              11.61562129855156,
-              48.13493638736294
-            ],
-            [
-              11.615701764822006,
-              48.134769017522345
-            ],
-            [
-              11.6157728433609,
-              48.13461775767837
-            ],
-            [
-              11.61584660410881,
-              48.13447097255172
-            ],
-            [
-              11.61593645811081,
-              48.13428659551753
-            ],
-            [
-              11.616014242172241,
-              48.134126383867695
-            ],
-            [
-              11.616128236055372,
-              48.133886512977064
-            ],
-            [
-              11.616259664297104,
-              48.133627844977326
-            ],
-            [
-              11.61629855632782,
-              48.13353207483375
-            ],
-            [
-              11.616336107254028,
-              48.13337902124278
-            ],
-            [
-              11.616369634866714,
-              48.13319553534239
-            ],
-            [
-              11.61637768149376,
-              48.133012048786334
-            ],
-            [
-              11.616360247135162,
-              48.132810660348134
-            ],
-            [
-              11.616275757551193,
-              48.13257436357359
-            ],
-            [
-              11.616193950176239,
-              48.13232732487394
-            ],
-            [
-              11.616106778383255,
-              48.1320963963191
-            ],
-            [
-              11.616008877754211,
-              48.13183413898773
-            ],
-            [
-              11.615889519453049,
-              48.13151728022046
-            ],
-            [
-              11.615813076496124,
-              48.13133736801628
-            ],
-            [
-              11.615774184465408,
-              48.131223691821006
-            ],
-            [
-              11.615697741508482,
-              48.131023191461715
-            ],
-            [
-              11.615618616342545,
-              48.13083164128014
-            ],
-            [
-              11.615531444549559,
-              48.13060518149892
-            ],
-            [
-              11.615434885025024,
-              48.130343811656196
-            ],
-            [
-              11.615315526723862,
-              48.13004663610937
-            ],
-            [
-              11.615257859230042,
-              48.12989536235426
-            ],
-            [
-              11.615206897258759,
-              48.12982017286641
-            ],
-            [
-              11.615004390478134,
-              48.1295292601205
-            ],
-            [
-              11.614761650562286,
-              48.129162260151794
-            ],
-            [
-              11.614537686109543,
-              48.12880599913692
-            ],
-            [
-              11.614113897085188,
-              48.128121219140226
-            ],
-            [
-              11.613855063915253,
-              48.1276799116376
-            ],
-            [
-              11.613727658987045,
-              48.12742389783921
-            ],
-            [
-              11.613602936267853,
-              48.12708642315513
-            ],
-            [
-              11.613490283489227,
-              48.12679728525618
-            ],
-            [
-              11.613405793905258,
-              48.12654842842367
-            ],
-            [
-              11.61333069205284,
-              48.126309417309045
-            ],
-            [
-              11.613251566886902,
-              48.12599341963372
-            ],
-            [
-              11.613232791423796,
-              48.12584123875656
-            ],
-            [
-              11.613189876079558,
-              48.12557089279218
-            ],
-            [
-              11.613169759511946,
-              48.12540170204418
-            ],
-            [
-              11.61314696073532,
-              48.125190436624024
-            ],
-            [
-              11.613114774227142,
-              48.124875327264085
-            ],
-            [
-              11.613091975450516,
-              48.12469091577602
-            ],
-            [
-              11.613079905509949,
-              48.12460050019291
-            ],
-            [
-              11.613057106733322,
-              48.12438386022744
-            ],
-            [
-              11.613041013479233,
-              48.12423436021426
-            ],
-            [
-              11.613018214702606,
-              48.124048155996576
-            ],
-            [
-              11.61299541592598,
-              48.12380913324701
-            ],
-            [
-              11.612971276044846,
-              48.12358353772147
-            ],
-            [
-              11.612948477268219,
-              48.12335436030009
-            ],
-            [
-              11.612936407327652,
-              48.123215600036296
-            ],
-            [
-              11.61291092634201,
-              48.12299268760191
-            ],
-            [
-              11.612894833087921,
-              48.122772459909555
-            ],
-            [
-              11.612880080938337,
-              48.12258714563204
-            ],
-            [
-              11.612861305475235,
-              48.122311411073476
-            ],
-            [
-              11.61285728216171,
-              48.12212161889396
-            ],
-            [
-              11.612866669893265,
-              48.12173666090456
-            ],
-            [
-              11.612859964370726,
-              48.12137497681623
-            ],
-            [
-              11.612851917743683,
-              48.121182495384474
-            ],
-            [
-              11.612851917743683,
-              48.12089332424997
-            ],
-            [
-              11.612589061260223,
-              48.12091749651245
-            ],
-            [
-              11.612184047698975,
-              48.1209586788593
-            ],
-            [
-              11.611465215682982,
-              48.121010604380025
-            ],
-            [
-              11.610907316207886,
-              48.121044624520295
-            ],
-            [
-              11.610370874404907,
-              48.1210553677178
-            ],
-            [
-              11.609839797019958,
-              48.12106611091309
-            ],
-            [
-              11.608780324459076,
-              48.12105178665223
-            ],
-            [
-              11.607715487480164,
-              48.12098195582334
-            ],
-            [
-              11.607111990451813,
-              48.1209533072507
-            ],
-            [
-              11.606484353542328,
-              48.12091570597486
-            ],
-            [
-              11.606087386608124,
-              48.12086378035821
-            ],
-            [
-              11.60556435585022,
-              48.12074202353406
-            ],
-            [
-              11.605084240436554,
-              48.12059519874464
-            ],
-            [
-              11.604842841625212,
-              48.12048955625849
-            ],
-            [
-              11.604260802268982,
-              48.120374960773674
-            ],
-            [
-              11.603617072105408,
-              48.12024783110857
-            ],
-            [
-              11.602490544319153,
-              48.120032963353765
-            ],
-            [
-              11.601739525794983,
-              48.119861068502885
-            ],
-            [
-              11.600945591926575,
-              48.119699916557785
-            ],
-            [
-              11.60012885928154,
-              48.119531601764294
-            ],
-            [
-              11.600089296698568,
-              48.119604568085556
-            ],
-            [
-              11.600043028593063,
-              48.11968335369033
-            ],
-            [
-              11.599998772144318,
-              48.1197527386399
-            ],
-            [
-              11.599937751889229,
-              48.11985032505559
-            ],
-            [
-              11.599881425499916,
-              48.11993761549971
-            ],
-            [
-              11.599835827946663,
-              48.12001237181341
-            ],
-            [
-              11.599792242050171,
-              48.1200822039603
-            ],
-            [
-              11.59972921013832,
-              48.12017889446849
-            ],
-            [
-              11.599569618701935,
-              48.12042420105239
-            ],
-            [
-              11.59943550825119,
-              48.12063638134986
-            ],
-            [
-              11.599302738904953,
-              48.12084139861073
-            ],
-            [
-              11.599187403917313,
-              48.12102224285159
-            ],
-            [
-              11.599093526601791,
-              48.12116817115608
-            ],
-            [
-              11.598950028419495,
-              48.12139288202905
-            ],
-            [
-              11.59885749220848,
-              48.121537914022696
-            ],
-            [
-              11.598744839429855,
-              48.12171965106638
-            ],
-            [
-              11.598609387874603,
-              48.121927349757556
-            ],
-            [
-              11.598359942436218,
-              48.12233737315673
-            ],
-            [
-              11.5980863571167,
-              48.12272590759354
-            ],
-            [
-              11.59768670797348,
-              48.12314129599897
-            ],
-            [
-              11.59742921590805,
-              48.123402702497536
-            ],
-            [
-              11.597075164318083,
-              48.1237321444092
-            ],
-            [
-              11.596951782703398,
-              48.12386642719094
-            ],
-            [
-              11.596852540969849,
-              48.123818085429946
-            ],
-            [
-              11.596090793609617,
-              48.12363008926027
-            ],
-            [
-              11.595607995986938,
-              48.12352445301536
-            ],
-            [
-              11.595267355442045,
-              48.12344746375085
-            ],
-            [
-              11.59496158361435,
-              48.1233525698475
-            ],
-            [
-              11.595042049884796,
-              48.12332571305054
-            ],
-            [
-              11.595173478126526,
-              48.123100115401876
-            ],
-            [
-              11.595398783683777,
-              48.122648917132146
-            ],
-            [
-              11.595436334609985,
-              48.12258804087169
-            ],
-            [
-              11.595739424228668,
-              48.12265965999417
-            ],
-            [
-              11.595940589904785,
-              48.122720536169744
-            ],
-            [
-              11.596222221851349,
-              48.122811850297836
-            ],
-            [
-              11.59642606973648,
-              48.12287093582365
-            ],
-            [
-              11.596734523773193,
-              48.12298552574058
-            ],
-            [
-              11.596560180187225,
-              48.1231717338104
-            ],
-            [
-              11.596713066101074,
-              48.12321112389251
-            ]
-          ]
-        }
-      }]
-    };
-
-    // A single point that animates along the route.
-    // Coordinates are initially set to origin.
-    const point = {
-      'type': 'FeatureCollection',
-      'features': [{
-        'type': 'Feature',
-        'properties': {},
-        'geometry': {
-          'type': 'Point',
-          'coordinates': origin
-        }
-      }]
-    };
-
-    // Calculate the distance in kilometers between route start/end point.
-    const lineDistance = turf.length(route.features[0]);
-
-    const arc = [];
-
-    // Number of steps to use in the arc and animation, more steps means
-    // a smoother arc and animation, but too many steps will result in a
-    // low frame rate
-    const steps = 10000;
-
-    // Draw an arc between the `origin` & `destination` of the two points
-    for (let i = 0; i < lineDistance; i += lineDistance / steps) {
-      const segment = turf.along(route.features[0], i);
-      arc.push(segment.geometry.coordinates);
-    }
-
-    // Update the route with calculated arc coordinates
-    route.features[0].geometry.coordinates = arc;
-
-    // Used to increment the value of the point measurement against the route.
-    let counter = 0;
-
-    map.on('load', () => {
-      // Add a source and layer displaying a point which will be animated in a circle.
-      map.addSource('route', {
-        'type': 'geojson',
-        'data': route
-      });
-
-      map.addSource('point', {
-        'type': 'geojson',
-        'data': point
-      });
-
-      map.addLayer({
-        'id': 'route',
-        'source': 'route',
-        'type': 'line',
-        'paint': {
-          'line-width': 2,
-          'line-color': '#007cbf'
-        }
-      });
-
-      map.addLayer({
-        'id': 'point',
-        'source': 'point',
-        'type': 'symbol',
-        'layout': {
-          // This icon is a part of the Mapbox Streets style.
-          // To view all images available in a Mapbox style, open
-          // the style in Mapbox Studio and click the "Images" tab.
-          // To add a new image to the style at runtime see
-          // https://docs.mapbox.com/mapbox-gl-js/example/add-image/
-          'icon-image': 'rocket',
-          'icon-rotate': ['get', 'bearing'],
-          'icon-rotation-alignment': 'map',
-          'icon-allow-overlap': true,
-          'icon-ignore-placement': true
-        }
-      });
-
-      function animate() {
-        const start =
-          route.features[0].geometry.coordinates[
-            counter >= steps ? counter - 1 : counter
-          ];
-        const end =
-          route.features[0].geometry.coordinates[
-            counter >= steps ? counter : counter + 1
-          ];
-        if (!start || !end) return;
-
-        // Update point geometry to a new position based on counter denoting
-        // the index to access the arc
-        point.features[0].geometry.coordinates =
-          route.features[0].geometry.coordinates[counter];
-
-        // Calculate the bearing to ensure the icon is rotated to match the route arc
-        // The bearing is calculated between the current point and the next point, except
-        // at the end of the arc, which uses the previous point and the current point
-        point.features[0].properties.bearing = turf.bearing(
-          turf.point(start),
-          turf.point(end)
-        );
-
-        // Update the source with this new data
-        map.getSource('point').setData(point);
-
-        // Request the next frame of animation as long as the end has not been reached
-        if (counter < steps) {
-          requestAnimationFrame(animate);
-        }
-
-        counter = counter + 1;
-      }
-
-      document.getElementById('replay').addEventListener('click', () => {
-        // Set the coordinates of the original point back to origin
-        point.features[0].geometry.coordinates = origin;
-
-        // Update the source layer
-        map.getSource('point').setData(point);
-
-        // Reset the counter
-        counter = 0;
-
-        // Restart the animation
-        animate(counter);
-      });
-
-      // Start the animation
-      animate(counter);
-    })*/
-
-
-    // Wait until the map has finished loading.
-    map.on('load', () => {
-      // Add a custom vector tileset source. This tileset contains
-      // point features representing all footways in Munich.
-
-      // Add the Combined Steps and Ramps vector tileset. Read more about
-      // the structure of data in this tileset in the documentation:
-      // https://docs.mapbox.com/vector-tiles/reference/mapbox-terrain-v2/
-      map.addSource('steps', {
-        type: 'vector',
-        url: 'mapbox://poorni-badrinath.ckv9d1um40ape23nsylhvugpt-3jpjf'
-      });
-      map.addLayer({
-        'id': 'steps',
-        'type': 'line',
-        'source': 'steps',
-        'source-layer': 'stepsandramps',
-        'layout': {
-          // Make the layer visible by default.
-          'visibility': 'none',
-          'line-join': 'round',
-          'line-cap': 'round'
-          
-        },
-        'paint': {
-          'line-color': '#D35400',
-          'line-width': 3,
-          'line-dasharray': [1, 3]
-        }
-      },'admin-1-boundary');
-
-      // Add the Combined Wheelchair Access vector tileset. Read more about
-      // the structure of data in this tileset in the documentation:
-      // https://docs.mapbox.com/vector-tiles/reference/mapbox-terrain-v2/
-      map.addSource('wheelchairaccess', {
-        type: 'vector',
-        url: 'mapbox://poorni-badrinath.ckyw5g4b81gfv21p6r5ggwd35-56ub5'
-      });
-      map.addLayer({
-        'id': 'wheelchairaccess',
-        'type': 'circle',
-        'source': 'wheelchairaccess',
-        'source-layer': 'wheelchairyes',
-        'layout': {
-          // Make the layer visible by default.
-          'visibility': 'none',
-
-        },
-        'paint': {
-          'circle-radius': 2,
-          'circle-color': '#7D3C98'
-        }
-      },'admin-1-boundary');
-    });
-
-    // After the last frame rendered before the map enters an "idle" state.
-    map.on('idle', () => {
-      // If these two layers were not added to the map, abort
-      if (!map.getLayer('wheelchairaccess') || !map.getLayer('steps')) {
-        return;
-      }
-
-      // Enumerate ids of the layers.
-      const toggleableLayerIds = ['wheelchairaccess', 'steps'];
-
-      // Set up the corresponding toggle button for each layer.
-      for (const id of toggleableLayerIds) {
-        // Skip layers that already have a button set up.
-        if (document.getElementById(id)) {
-          continue;
-        }
-
-        // Create a link.
-        const link = document.createElement('a');
-        link.id = id;
-        link.href = '#';
-        link.textContent = id;
-        link.className = 'active';
-
-        // Show or hide layer when the toggle is clicked.
-        link.onclick = function(e) {
-          const clickedLayer = this.textContent;
-          e.preventDefault();
-          e.stopPropagation();
-
-          const visibility = map.getLayoutProperty(
-            clickedLayer,
-            'visibility'
-          );
-
-          // Toggle layer visibility by changing the layout object's visibility property.
-          if (visibility === 'visible') {
-            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
-            this.className = '';
-          } else {
-            this.className = 'active';
-            map.setLayoutProperty(
-              clickedLayer,
-              'visibility',
-              'visible'
-            );
-          }
-        };
-
-        const layers = document.getElementById('menu');
-        layers.appendChild(link);
-      }
-    })
-
-    // create legend
-const legend = document.getElementById('legend');
- 
- layers.forEach((layer, i) => {
- const color = colors[i];
- const item = document.createElement('div');
- const key = document.createElement('span');
- key.className = 'legend-key';
- key.style.backgroundColor = color;
-  
- const value = document.createElement('span');
- value.innerHTML = `${layer}`;
- item.appendChild(key);
- item.appendChild(value);
- legend.appendChild(item);
- });
-
-    
     map.addControl(
       new MapboxDirections({
         accessToken: mapboxgl.accessToken
@@ -2288,8 +184,226 @@ const legend = document.getElementById('legend');
       'bottom-right'
     );
 
-    // Sandbox example how to keep data visible while changing background maps:
-    // https://dev.to/dqunbp/effectively-switching-mapbox-gl-styles-1a3i
+    const draw = new MapboxDraw({
+      displayControlsDefault: false,
+      controls: {
+        line_string: true,
+        trash: true
+      },
+      defaultMode: 'draw_line_string'
+    });
+
+    map.addControl(draw);
+
+    map.on('draw.create', updateRoute);
+    map.on('draw.update', updateRoute);
+    map.on('draw.delete', removeRoute);
+
+    function updateRoute() {
+      removeRoute();
+
+      const profile = 'walking';
+      const data = draw.getAll();
+
+      if (!data.features.length) return;
+
+      const lastFeature = data.features.length - 1;
+      const coords = data.features[lastFeature].geometry.coordinates;
+
+      const newCoords = coords.join(';');
+      const radius = coords.map(() => 25);
+
+      getMatch(newCoords, radius, profile);
+    }
+
+    async function getMatch(coordinates, radius, profile) {
+      const radiuses = radius.join(';');
+
+      const query = await fetch(
+        `https://api.mapbox.com/matching/v5/mapbox/${profile}/${coordinates}?geometries=geojson&radiuses=${radiuses}&steps=true&access_token=${mapboxgl.accessToken}`
+      );
+
+      const response = await query.json();
+
+      if (response.code !== 'Ok') {
+        alert(`${response.code} - ${response.message}`);
+        return;
+      }
+
+      const coords = response.matchings[0].geometry;
+      addRoute(coords);
+      getInstructions(response.matchings[0]);
+    }
+
+    function getInstructions(data) {
+      const directions = document.getElementById('directions');
+      let tripDirections = '';
+
+      for (const leg of data.legs) {
+        for (const step of leg.steps) {
+          tripDirections += `<li>${step.maneuver.instruction}</li>`;
+        }
+      }
+
+      directions.innerHTML = `
+        <p><strong>Trip duration: ${Math.floor(data.duration / 60)} min.</strong></p>
+        <ol>${tripDirections}</ol>
+      `;
+    }
+
+    function addRoute(coords) {
+      if (map.getSource('route')) {
+        map.removeLayer('route');
+        map.removeSource('route');
+      }
+
+      map.addLayer({
+        id: 'route',
+        type: 'line',
+        source: {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: coords
+          }
+        },
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#03AA46',
+          'line-width': 8,
+          'line-opacity': 0.8
+        }
+      });
+    }
+
+    function removeRoute() {
+      if (!map.getSource('route')) return;
+      map.removeLayer('route');
+      map.removeSource('route');
+    }
+
+    function addCustomLayers() {
+      if (!map.getSource('steps')) {
+        map.addSource('steps', {
+          type: 'vector',
+          url: 'mapbox://poorni-badrinath.ckv9d1um40ape23nsylhvugpt-3jpjf'
+        });
+
+        map.addLayer({
+          id: 'steps',
+          type: 'line',
+          source: 'steps',
+          'source-layer': 'stepsandramps',
+          layout: {
+            visibility: 'none',
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': '#D35400',
+            'line-width': 3,
+            'line-dasharray': [1, 3]
+          }
+        });
+      }
+
+      if (!map.getSource('wheelchairaccess')) {
+        map.addSource('wheelchairaccess', {
+          type: 'vector',
+          url: 'mapbox://poorni-badrinath.ckyw5g4b81gfv21p6r5ggwd35-56ub5'
+        });
+
+        map.addLayer({
+          id: 'wheelchairaccess',
+          type: 'circle',
+          source: 'wheelchairaccess',
+          'source-layer': 'wheelchairyes',
+          layout: {
+            visibility: 'none'
+          },
+          paint: {
+            'circle-radius': 2,
+            'circle-color': '#7D3C98'
+          }
+        });
+      }
+    }
+
+    map.on('load', () => {
+      addCustomLayers();
+      createLayerToggle();
+    });
+
+    map.on('style.load', () => {
+      addCustomLayers();
+    });
+
+    function createLayerToggle() {
+      const toggleableLayerIds = ['wheelchairaccess', 'steps'];
+      const layerMenu = document.getElementById('layer-menu');
+
+      for (const id of toggleableLayerIds) {
+        if (document.getElementById(id)) continue;
+
+        const link = document.createElement('a');
+        link.id = id;
+        link.href = '#';
+        link.textContent = id;
+        link.className = '';
+
+        link.onclick = function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          const clickedLayer = this.textContent;
+          const visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+
+          if (visibility === 'visible') {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+            this.className = '';
+          } else {
+            map.setLayoutProperty(clickedLayer, 'visibility', 'visible');
+            this.className = 'active';
+          }
+        };
+
+        layerMenu.appendChild(link);
+      }
+    }
+
+    const legendLayers = [
+      'Blue Route - Mapbox Directions',
+      'Green Route - OSM API',
+      'Purple Dots - Wheelchair Data',
+      'Orange Lines - Steps and Ramps'
+    ];
+
+    const colors = [
+      '#2E86C1',
+      '#1E8449',
+      '#6C3483',
+      '#D35400'
+    ];
+
+    const legend = document.getElementById('legend');
+
+    legendLayers.forEach((layer, i) => {
+      const item = document.createElement('div');
+      const key = document.createElement('span');
+      key.className = 'legend-key';
+      key.style.backgroundColor = colors[i];
+
+      const value = document.createElement('span');
+      value.innerHTML = layer;
+
+      item.appendChild(key);
+      item.appendChild(value);
+      legend.appendChild(item);
+    });
 
     const layerList = document.getElementById('toggle');
     const inputs = layerList.getElementsByTagName('input');
@@ -2298,15 +412,8 @@ const legend = document.getElementById('legend');
       input.onclick = (layer) => {
         const layerId = layer.target.id;
         map.setStyle('mapbox://styles/poorni-badrinath/' + layerId);
-        // Old version grabbing basemaps from default Mapbox user: map.setStyle('mapbox://styles/mapbox/' + layerId);
       };
     }
-
-  //Full Screen
-
-  map.addControl(new mapboxgl.FullscreenControl());
-
   </script>
 </body>
-
 </html>
